@@ -64,8 +64,8 @@ class Transition(object):
 
 
 
-		if(len(self.errors)>0):
-			print(self.errors)
+		# if(len(self.errors)>0):
+		# 	print(self.errors)
 
 
     	
