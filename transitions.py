@@ -63,7 +63,7 @@ class Transition(object):
 			self.errors.append("TRANSICION SIN tapeDisplacement")
 
 
-
+		# self.printTransition()
 		# if(len(self.errors)>0):
 		# 	print(self.errors)
 
@@ -71,7 +71,7 @@ class Transition(object):
     	
 	def printTransition (self):
 
-		print("THIS TRANSITION IS DEFINED THIS WAY:")
+		print("\nTHIS TRANSITION IS DEFINED THIS WAY:")
 		print("INITIAL STATE : "+ str(self.initialState))
 		print("TAPE INPUT :" + str( self.tapeInput))
 		print("MEM CACHE VALUE :" + str( self.memCacheValue))

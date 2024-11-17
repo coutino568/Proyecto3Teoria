@@ -46,46 +46,69 @@ class Machine(object):
 		else:
 			self.errors.append("En la definicion de la MT falto la definicion de estados de aceptacion")
 
-		if 'tape' in kwargs:
-			self.tape = kwargs['tape']
+		if 'tapes' in kwargs:
+			self.tapes = kwargs['tapes']
 		else:
 			self.errors.append("En la definicion de la MT falto la definicion de la cinta que leera")
 
 
 
-		print(self.acceptanceStates)
-
-
-
-
-		self.currentState=self.initialState
-		self.currentTapeIndex=0
-		self.currentTapeInput = ""
-		self.memorycache=""
-		self.running = True
-
-
-		print("TAPE : " + str(self.tape))
-		print(len(self.tape))
-
-
-
-		self.printID()
-
-
-		while self.currentTapeIndex<len(self.tape)-1:
-
-			if self.running:
-				self.applyChange()
-				self.printID()
-
-
-
-		if self.currentState in self.acceptanceStates:
-			print("FELICIDADES LA CINTA FUE ACEPTADA")
-
+		if 'debug' in kwargs:
+			self.debug = kwargs['debug']
 		else:
-			print("LASTIMA LA CINTA NO FUE ACEPTADA")
+			self.debug = False
+
+
+		# print(self.acceptanceStates)
+
+
+
+
+		
+		self.activeTape = 0
+
+		# print("TAPE : " + str(self.tape))
+		# print(len(self.tape))
+
+		for tape in self.tapes:
+
+			self.currentState=self.initialState
+			self.currentTapeIndex=0
+			self.currentTapeInput = ""
+			self.memorycache=""
+			self.running = True
+
+			
+
+
+
+			print("----------------------------------------------------------------------------")
+			print("\nCINTA ACTIVA :\n" + str (self.tapes [self.activeTape]) + " \n ASI INICIO : ")
+			self.printID()
+
+
+			while self.currentTapeIndex<(len(self.tapes[self.activeTape])-1):
+
+				if self.running:
+					self.applyChange()
+					# self.printID()
+
+					if self.debug == True:
+						self.printID()
+
+			self.applyChange()
+
+			print("\nASI TERMINO : ")
+			self.printID()
+
+
+			if self.currentState in self.acceptanceStates:
+				print("FELICIDADES LA CINTA FUE ACEPTADA")
+
+			else:
+				print("LASTIMA LA CINTA NO FUE ACEPTADA")
+
+			self.activeTape= self.activeTape +1
 
 
 
@@ -93,7 +116,7 @@ class Machine(object):
 	def printID(self):
 		print("\nCurrent state:" + str(self.currentState))
 		print("Current pointer on tape:" + str(self.currentTapeIndex))
-		print("Current character on tape :" +str(self.tape[self.currentTapeIndex]) )
+		print("Current character on tape :" +str(self.tapes[self.activeTape][self.currentTapeIndex]) )
 		print("Current data on cache : " + str(self.memorycache))
 
 
@@ -101,32 +124,56 @@ class Machine(object):
 
 	#revisa en el conjunto de transiciones si encutnra un match
 	def applyChange(self):
-		self.currentTapeInput= self.tape[self.currentTapeIndex]
-		for transition in self.transitions:
-			if self.transitionMatches(transition):
-				print("Encontre una transicion que hace match con los parametros actuales. HARE LOS CAMBIOS -->")
+		
+		self.currentTapeInput= self.tapes[self.activeTape][self.currentTapeIndex]
+		# print("Trying to aply cahanges")
 
+		# print(self.transitions)
+		for transition in self.transitions:
+			# print("revisando transicion")
+
+
+
+
+
+			if self.transitionMatches(transition):
+				if(self.debug):
+					print("Encontre una transicion que hace match con los parametros actuales. HARE LOS CAMBIOS -->")
+
+				#si llega al final de la cinta y el displacement es a la derecha, signifca que termino de leer
 				self.currentState = transition.finalState
 				self.memorycache = transition.memCacheValue
+				if self.currentTapeIndex==len(self.tapes[self.activeTape])-1 and transition.tapeDisplacement=="R":
+					self.running = False
+					break
+
+				
 				#para evitar out of bounds
 				if transition.tapeDisplacement=="R":
-					self.currentTapeIndex = min(self.currentTapeIndex+1, len(self.tape)-1)
+					self.currentTapeIndex = min(self.currentTapeIndex+1, len(self.tapes[self.activeTape])-1)
 				else:
 					self.currentTapeIndex = max(self.currentTapeIndex-1,0)
 				
 
+				if len(transition.newMemCacheValue)>0:
+					self.memorycache = transition.newMemCacheValue
 
-
-				#si llega al final de la cinta y el displacement es a la derecha, signifca que termino de leer
-
-				if self.currentTapeIndex==len(self.tape)-1 and transition.tapeDisplacement=="R":
-					self.running = False
+				if len(transition.tapeOutput)>0:
+					self.tapes[self.activeTape[self.currentTapeIndex]]=transition.tapeOutput
+				
 				break
-
+			# else:
+		# self.running = False
+		# print("ERROR ; NO HAY UNA TRANSICION DEFINIDA")
 
 
 	#Funcion para validar si una descripcion hace match con la entrada de alguna transicion
 	def transitionMatches(self, transition):
+		
+		# print("transitionMatches")
+		# print("\nCurrent state:" + str(self.currentState))
+		# print("Current pointer on tape:" + str(self.currentTapeIndex))
+		# print("Current character on tape :" +str(self.tapes[self.activeTape[self.currentTapeIndex]]) )
 
 		if self.currentState== transition.initialState:
 			if self.currentTapeInput== transition.tapeInput:
